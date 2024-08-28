@@ -71,13 +71,19 @@ app.put("/users/:userId", async (req, res) => {
     });
 });
 
-app.delete("/remove_user/:user_id", (req, res) => {
-  const user_id = req.params.user_id;
-  users = users.filter((f) => {
-    return f.user_id != user_id;
-  });
+app.delete("/remove_user/:user_id", async (req, res) => {
+  const user_id = parseInt(req.params.user_id);
 
-  res.send(users);
+  try {
+    const deletedUser = await db.user.delete({
+      where: { id: user_id },
+    });
+
+    res.send({ message: "User deleted successfully", user: deletedUser });
+  } catch (err) {
+    const error = reusable.prismaCatch(err);
+    res.status(error.status).send({ message: error.message });
+  }
 });
 
 const port = 3000;
