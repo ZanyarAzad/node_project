@@ -1,17 +1,23 @@
 const Joi = require("joi");
 
-exports.validateUser = (req, res, next) => {
-  const schema = Joi.object({
-    first_name: Joi.string().required(),
-    last_name: Joi.string().required(),
-    age: Joi.number().required(),
-  });
+class ValidateUser {
+  addUserValidation(body) {
+    const schema = Joi.object({
+      first_name: Joi.string().required(),
+      last_name: Joi.string().required(),
+      age: Joi.number().integer().required(),
+    });
+    return schema.validate(body);
+    // return (req, res, next) => {
+    //   const { error } =
 
-  const { error } = schema.validate(req.body);
-
-  if (error) {
-    res.status(400).send({ message: error.details[0].message });
-  } else {
-    next();
+    //   if (error) {
+    //     res.status(400).send({ message: error.details[0].message });
+    //   } else {
+    //     next();
+    //   }
+    // };
   }
-};
+}
+
+module.exports = new ValidateUser();

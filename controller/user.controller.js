@@ -1,60 +1,91 @@
 const db = require("../db");
 const reusable = require("../plugin/methods");
-
+const model = require("../models/user.model");
+const validate = require("../validation/user.validation");
 class UserController {
-  async getAllUsers(req, res) {
-    const allUser = await db.user.findMany({
-      select: { id: true, first_name: true, age: true },
-      where: { active: true },
-    });
-    res.send(allUser);
-  }
-
-  async getUser(req, res) {
-    const userId = parseInt(req.params.userId);
-    try {
-      const user = await db.user.findFirstOrThrow({
-        where: { id: userId },
-        select: { id: true, first_name: true, age: true },
+  getAllUsers(req, res) {
+    model
+      .getAllUsers()
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        const error = reusable.prismaCatch(err);
+        res.status(error.status).send({ message: error.message });
       });
-      res.send(user);
-    } catch (err) {
-      const error = reusable.prismaCatch(err);
-      res.status(error.status).send({ message: error.message });
-    }
   }
 
-  async getUserByAge(req, res) {
+  getUser(req, res) {
+    const userId = parseInt(req.params.userId);
+    model
+      .getUserById(userId)
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        const error = reusable.prismaCatch(err);
+        res.status(error.status).send({ message: error.message });
+      });
+  }
+
+  getUserByAge(req, res) {
     const age = req.params.age;
-    const user = await db.user.findFirst({
-      where: { age: age },
-      select: { id: true, first_name: true, age: true },
-    });
-    res.send(user);
+    model
+      .getUserByAge(age)
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        const error = reusable.prismaCatch(err);
+        res.status(error.status).send({ message: error.message });
+      });
   }
 
-  async createUser(req, res) {
+  createUser(req, res) {
     const body = req.body;
-    const addUser = await db.user.create({ data: body });
-    res.send(addUser);
+    if (validate.addUserValidation(body).error) {
+      res.send({
+        message: validate.addUserValidation(body).error.details[0].message,
+      });
+    } else {
+      console.log("valid");
+      model
+        .addUser(body)
+        .then((data) => {
+          res.send(data);
+        })
+        .catch((err) => {
+          const error = reusable.prismaCatch(err);
+          res.status(error.status).send({ message: error.message });
+        });
+    }
   }
 
   async updateUser(req, res) {
     const body = req.body;
     const userId = parseInt(req.params.userId);
-    const user = await db.user.update({ data: body, where: { id: userId } });
-    res.send(user);
+    model
+      .updateUser(body, userId)
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        const error = reusable.prismaCatch(err);
+        res.status(error.status).send({ message: error.message });
+      });
   }
 
   async deleteUser(req, res) {
     const user_id = parseInt(req.params.user_id);
-    try {
-      const deletedUser = await db.user.delete({ where: { id: user_id } });
-      res.send({ message: "User deleted successfully", user: deletedUser });
-    } catch (err) {
-      const error = reusable.prismaCatch(err);
-      res.status(error.status).send({ message: error.message });
-    }
+    model
+      .deleteUser(user_id)
+      .then((data) => {
+        res.send(data);
+      })
+      .catch((err) => {
+        const error = reusable.prismaCatch(err);
+        res.status(error.status).send({ message: error.message });
+      });
   }
 }
 
